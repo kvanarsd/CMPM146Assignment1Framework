@@ -40,12 +40,12 @@ public class SteeringBehavior : MonoBehaviour
             //Debug.Log(pos.z + " " + pos.x + ", " + target.z + " " + target.x);
             if (pos.z < target.z && target.z - pos.z > slowdown_buffer.z)
             {
-                kinematic.SetDesiredSpeed(kinematic.speed + speed);
+                kinematic.SetDesiredSpeed(speed);
                 Debug.Log("Forward");
             }
             else if (pos.z > target.z && pos.z - target.z > slowdown_buffer.z)
             {
-                kinematic.SetDesiredSpeed(kinematic.speed - speed);
+                kinematic.SetDesiredSpeed(-speed);
                 Debug.Log("Backward");
             } else if (Mathf.Abs(pos.z - target.z) < slowdown_buffer.z)
             {
@@ -53,20 +53,22 @@ public class SteeringBehavior : MonoBehaviour
                 Debug.Log("Stopping Straight");
             }
 
-            if (pos.x < target.x && target.x - pos.x > slowdown_buffer.x)
-            {
-                kinematic.SetDesiredRotationalVelocity(kinematic.rotational_velocity + velocity);
-                Debug.Log("Rotating Right");
-            }
-            else if (pos.x > target.x && pos.x - target.x > slowdown_buffer.x)
-            {
-                kinematic.SetDesiredRotationalVelocity(kinematic.rotational_velocity - velocity);
-                Debug.Log("Rotating Left");
-            }
-            else if (Mathf.Abs(pos.x - target.x) < slowdown_buffer.x)
+            Vector3 toTarget = (target - pos).normalized;
+            Vector3 forward = transform.forward;
+            if (kinematic.speed < 0) forward *= -1;
+            if (Vector3.Dot(forward, toTarget) > 0.6)
             {
                 kinematic.SetDesiredRotationalVelocity(0);
                 Debug.Log("Stopping Rotation");
+            } else if (pos.x < target.x)
+            {
+                kinematic.SetDesiredRotationalVelocity(velocity);
+                Debug.Log("Rotating Right");
+            }
+            else if (pos.x > target.x)
+            {
+                kinematic.SetDesiredRotationalVelocity(-velocity);
+                Debug.Log("Rotating Left");
             }
         }
     }

@@ -1069,9 +1069,9 @@ MonoBehaviour:
   kinematic: {fileID: 0}
   path: []
   label: {fileID: 200820899}
-  speed: 1
-  velocity: 0.2
-  slowdown_buffer: {x: 5, y: 0, z: 1}
+  speed: 25
+  velocity: 60
+  slowdown_buffer: {x: 20, y: 0, z: 7}
 --- !u!114 &1006009576
 MonoBehaviour:
   m_ObjectHideFlags: 0
