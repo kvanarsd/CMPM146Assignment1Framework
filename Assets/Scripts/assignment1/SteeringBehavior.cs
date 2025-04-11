@@ -35,6 +35,13 @@ public class SteeringBehavior : MonoBehaviour
 
         Vector3 pos = transform.position;
 
+        /* Class example
+        float dist = (target - pos).magnitude;
+        Vector3 dir = target - pos;
+        float angle = Vector3.SignedAngle(transform.forward, dir, Vector3.up);
+        //kinematic.SetDesiredRotationalVelocity(angle);
+        kinematic.SetDesiredRotationalVelocity(angle * angle * Math.Signed(angle);*/
+
         // Check if there is a target
         if (target != null)
         {
@@ -43,7 +50,7 @@ public class SteeringBehavior : MonoBehaviour
             // Check if the distance from target is greater than the slowdown distance
             if (pos.z < target.z && target.z - pos.z > slowdown_buffer.z)
             {
-                kinematic.SetDesiredSpeed(speed);
+                kinematic.SetDesiredSpeed(kinematic.GetMaxSpeed());
                 Debug.Log("Forward");
             }
             // Check if target is behind
