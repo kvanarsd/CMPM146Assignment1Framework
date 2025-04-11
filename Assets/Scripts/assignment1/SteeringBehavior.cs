@@ -35,24 +35,33 @@ public class SteeringBehavior : MonoBehaviour
 
         Vector3 pos = transform.position;
 
-        if (target != null && pos != target)
+        // Check if there is a target
+        if (target != null)
         {
             //Debug.Log(pos.z + " " + pos.x + ", " + target.z + " " + target.x);
+            // Check if target is in front 
+            // Check if the distance from target is greater than the slowdown distance
             if (pos.z < target.z && target.z - pos.z > slowdown_buffer.z)
             {
                 kinematic.SetDesiredSpeed(speed);
                 Debug.Log("Forward");
             }
+            // Check if target is behind
+            // Check if the distance from target is greater than the slowdown distance
             else if (pos.z > target.z && pos.z - target.z > slowdown_buffer.z)
             {
                 kinematic.SetDesiredSpeed(-speed);
                 Debug.Log("Backward");
-            } else if (Mathf.Abs(pos.z - target.z) < slowdown_buffer.z)
+            }
+            // Check if within buffer then slowdown
+            else if (Mathf.Abs(pos.z - target.z) < slowdown_buffer.z)
             {
                 kinematic.SetDesiredSpeed(0);
                 Debug.Log("Stopping Straight");
             }
 
+            // create dot product from car to target
+            // if facing the target then stop rotating
             Vector3 toTarget = (target - pos).normalized;
             Vector3 forward = transform.forward;
             if (kinematic.speed < 0) forward *= -1;
