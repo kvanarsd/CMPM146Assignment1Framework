@@ -1,19 +1,27 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TMPro;
+using System;
+using System.IO;
+using Unity.Mathematics;
 
 public class SteeringBehavior : MonoBehaviour
 {
+    
     public Vector3 target;
     public KinematicBehavior kinematic;
     public List<Vector3> path;
+    public int pathIndex = 0;
     // you can use this label to show debug information,
     // like the distance to the (next) target
     public TextMeshProUGUI label;
 
     public float speed;
     public float velocity;
-    public Vector3 slowdown_buffer;
+    public float slowdown_buffer;
+    public float path_slowdown_buffer;
+    public float path_dontSlowdown_buffer;
+    public float switch_buffer;
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -33,64 +41,66 @@ public class SteeringBehavior : MonoBehaviour
         // you can use kinematic.SetDesiredSpeed(...) and kinematic.SetDesiredRotationalVelocity(...)
         //    to "request" acceleration/decceleration to a target speed/rotational velocity
 
+        // Check if there is a target
+        if (this.path == null)
+        {
+            TargetFollow(target);
+        } else {
+            PathFollow();
+        }
+
+        // kinematic.SetDesiredSpeed(kinematic.GetMaxSpeed());
+        // kinematic.SetDesiredRotationalVelocity(kinematic.GetMaxRotationalVelocity());
+    }
+
+    public void TargetFollow(Vector3 target) {
         Vector3 pos = transform.position;
 
-        /* Class example
+        //Class example
         float dist = (target - pos).magnitude;
         Vector3 dir = target - pos;
         float angle = Vector3.SignedAngle(transform.forward, dir, Vector3.up);
-        //kinematic.SetDesiredRotationalVelocity(angle);
-        kinematic.SetDesiredRotationalVelocity(angle * angle * Math.Signed(angle);*/
 
-        // Check if there is a target
-        if (target != null)
-        {
-            //Debug.Log(pos.z + " " + pos.x + ", " + target.z + " " + target.x);
-            // Check if target is in front 
-            // Check if the distance from target is greater than the slowdown distance
-            if (pos.z < target.z && target.z - pos.z > slowdown_buffer.z)
-            {
-                kinematic.SetDesiredSpeed(kinematic.GetMaxSpeed());
-                Debug.Log("Forward");
-            }
-            // Check if target is behind
-            // Check if the distance from target is greater than the slowdown distance
-            else if (pos.z > target.z && pos.z - target.z > slowdown_buffer.z)
-            {
-                kinematic.SetDesiredSpeed(-speed);
-                Debug.Log("Backward");
-            }
-            // Check if within buffer then slowdown
-            else if (Mathf.Abs(pos.z - target.z) < slowdown_buffer.z)
-            {
-                kinematic.SetDesiredSpeed(0);
-                Debug.Log("Stopping Straight");
-            }
+        float speed = kinematic.GetMaxSpeed();
+        
+        float clampedDist = Mathf.Clamp(dist, 0, slowdown_buffer) / slowdown_buffer;
+        speed *= clampedDist;
+        if (dist < 1f) {
+            speed = 0;
+        }
+        kinematic.SetDesiredSpeed(speed);
+        kinematic.SetDesiredRotationalVelocity(angle * angle * Math.Sign(angle));
+    }
 
-            // create dot product from car to target
-            // if facing the target then stop rotating
-            Vector3 toTarget = (target - pos).normalized;
-            Vector3 forward = transform.forward;
-            if (kinematic.speed < 0) forward *= -1;
-            if (Vector3.Dot(forward, toTarget) > 0.6)
-            {
-                kinematic.SetDesiredRotationalVelocity(0);
-                Debug.Log("Stopping Rotation");
-            } else if (pos.x < target.x)
-            {
-                kinematic.SetDesiredRotationalVelocity(velocity);
-                Debug.Log("Rotating Right");
-            }
-            else if (pos.x > target.x)
-            {
-                kinematic.SetDesiredRotationalVelocity(-velocity);
-                Debug.Log("Rotating Left");
+    public void PathFollow() {
+        Vector3 pos = transform.position;
+
+        if (pathIndex == path.Count - 1) {
+            TargetFollow(path[pathIndex]);
+        } else if (path.Count != 0) {
+            float dist = (path[pathIndex] - pos).magnitude;
+            Vector3 dir = path[pathIndex] - pos;
+            float angle = Vector3.SignedAngle(transform.forward, dir, Vector3.up);
+
+            Vector3 targetToBefore = path[pathIndex] - pos;
+            Vector3 targetToAfter = path[pathIndex] - path[pathIndex+1];
+            float nextAngle = Vector3.SignedAngle(targetToBefore, targetToAfter, Vector3.up);
+
+            float speed = kinematic.GetMaxSpeed();
+            float clampedDist = Mathf.Clamp(dist, path_dontSlowdown_buffer, path_slowdown_buffer) / path_slowdown_buffer;
+            kinematic.SetDesiredSpeed(speed);
+            kinematic.SetDesiredRotationalVelocity(Mathf.Abs(Mathf.Pow(angle, 2)) * Math.Sign(angle));
+
+            if (dist <= -switch_buffer/180*Math.Abs(nextAngle)+switch_buffer) {
+                pathIndex++;
+                Debug.Log("Switched to " + pathIndex + "!");
             }
         }
     }
 
     public void SetTarget(Vector3 target)
     {
+        this.path = null;
         this.target = target;
         EventBus.ShowTarget(target);
     }
@@ -98,6 +108,7 @@ public class SteeringBehavior : MonoBehaviour
     public void SetPath(List<Vector3> path)
     {
         this.path = path;
+        this.pathIndex = 0;
     }
 
     public void SetMap(List<Wall> outline)
