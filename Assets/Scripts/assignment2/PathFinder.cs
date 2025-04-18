@@ -21,15 +21,16 @@ public class PathFinder : MonoBehaviour
         public float heuristic;
         public float totalDist;
         public AStarEntry parent;
+        public GraphNeighbor neighbor;
 
-        public AStarEntry(GraphNode node, float dist, float heuristic, AStarEntry parent=null)
+        public AStarEntry(GraphNode node, float dist, float heuristic, AStarEntry parent, GraphNeighbor neighbor)
         {
             this.node = node;
             this.dist = dist;
             this.heuristic = heuristic;
             this.totalDist = dist + heuristic;
             this.parent = parent;
-
+            this.neighbor = neighbor;
         }
     }
     public static (List<Vector3>, int) AStar(GraphNode start, GraphNode destination, Vector3 target)
@@ -38,7 +39,7 @@ public class PathFinder : MonoBehaviour
         List<Vector3> path = new List<Vector3>() { target };
 
         // create data struction that holds both distances and parent
-        List<AStarEntry> frontier = new() { new AStarEntry(start, 0, GetHeuristic(start, destination)) };
+        List<AStarEntry> frontier = new() { new AStarEntry(start, 0, GetHeuristic(start, destination), null, null) };
         List<GraphNode> expanded = new();
 
         AStarEntry best = null;
@@ -54,7 +55,7 @@ public class PathFinder : MonoBehaviour
             {   
                 if(expanded.Contains(neighbor.GetNode())) continue;
 
-                AStarEntry child = new AStarEntry(neighbor.GetNode(), best.dist + GetHeuristic(best.node, neighbor.GetNode()), GetHeuristic(neighbor.GetNode(), destination), best);
+                AStarEntry child = new AStarEntry(neighbor.GetNode(), best.dist + GetHeuristic(best.node, neighbor.GetNode()), GetHeuristic(neighbor.GetNode(), destination), best, neighbor);
                 InsertSorted(frontier, child);
                 
                 // if already read skip
@@ -63,31 +64,15 @@ public class PathFinder : MonoBehaviour
 
         while (best != null && best.parent != null)
         {
-            
+            path.Insert(0, GetCenterOfWall(best.neighbor.GetWall()));
         }
-
-        // buffer.Add(start dist start, start dist target);
-        // shuffle
-        // add neighbors of smallest
-
-
-
-
-        /* random walk code from section
-        List<Vector3> path = new List<Vector3>() { start.GetCenter() };
-        while (true)
-        {
-            GraphNeighbor best = start.GetNeighbor(Random.Range(0, start.GetNeighbors().Count));
-            path.Add(best.GetNode().GetCenter());
-            start = best.GetNode();
-            if (start == destination) break;
-        }
-
-        path.Add(target);*/
 
         // return path and number of nodes expanded
-        return (path, 0);
+        return (path, expanded.Count);
+    }
 
+    public static Vector3 GetCenterOfWall(Wall wall) {
+        return (wall.start + wall.end) / 2f;
     }
 
     public static float GetHeuristic(GraphNode start, GraphNode end)
