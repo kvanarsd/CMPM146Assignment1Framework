@@ -17,7 +17,19 @@ public class PathFinder : MonoBehaviour
     public static (List<Vector3>, int) AStar(GraphNode start, GraphNode destination, Vector3 target)
     {
         // Implement A* here
-        List<Vector3> path = new List<Vector3>() { target };
+        //List<Vector3> path = new List<Vector3>() { target };
+
+        // random walk code from section
+        List<Vector3> path = new List<Vector3>() { start.GetCenter() };
+        while (true)
+        {
+            GraphNeighbor best = start.GetNeighbor(Random.Range(0, start.GetNeighbors().Count));
+            path.Add(best.GetNode().GetCenter());
+            start = best.GetNode();
+            if (start == destination) break;
+        }
+
+        path.Add(target);
 
         // return path and number of nodes expanded
         return (path, 0);
