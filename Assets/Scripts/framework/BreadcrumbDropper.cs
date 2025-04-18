@@ -5,6 +5,7 @@ public class BreadcrumbDropper : MonoBehaviour
 {
     Vector3 last_drop;
     public GameObject breadcrumb;
+    public float delay = 1f;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -21,12 +22,12 @@ public class BreadcrumbDropper : MonoBehaviour
     {
         while (true)
         {
-            if ((last_drop - transform.position).sqrMagnitude > 1)
+            if ((last_drop - transform.position).sqrMagnitude > delay)
             {
                 Instantiate(breadcrumb, transform.position, Quaternion.identity);
                 last_drop = transform.position;
             }
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(delay);
         }
     }
 }
