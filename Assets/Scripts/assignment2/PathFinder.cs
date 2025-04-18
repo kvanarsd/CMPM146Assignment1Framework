@@ -35,6 +35,7 @@ public class PathFinder : MonoBehaviour
     }
     public static (List<Vector3>, int) AStar(GraphNode start, GraphNode destination, Vector3 target)
     {
+        Debug.Log("Called " + target);
         // Implement A* here
         List<Vector3> path = new List<Vector3>() { target };
 
@@ -65,6 +66,7 @@ public class PathFinder : MonoBehaviour
         while (best != null && best.parent != null)
         {
             path.Insert(0, GetCenterOfWall(best.neighbor.GetWall()));
+            best = best.parent;
         }
 
         // return path and number of nodes expanded
