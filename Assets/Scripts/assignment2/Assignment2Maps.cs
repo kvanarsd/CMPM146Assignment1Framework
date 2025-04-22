@@ -79,7 +79,7 @@ public class Assignment2Maps : MapCollection
 
 
             GraphNode n = new GraphNode(0, new List<Wall> { outline[0], outline[1], outline[2], new Wall(new Vector3(-25, 0, -30), new Vector3(50, 0, 50)) });
-            GraphNode n1 = new GraphNode(0, new List<Wall> { new Wall(new Vector3(50, 0, 50), new Vector3(-25, 0, -30)), outline[3], outline[4], outline[5] });
+            GraphNode n1 = new GraphNode(1, new List<Wall> { new Wall(new Vector3(50, 0, 50), new Vector3(-25, 0, -30)), outline[3], outline[4], outline[5] });
             n.AddNeighbor(n1, 3);
             n1.AddNeighbor(n, 0);
             Graph g = new Graph();
