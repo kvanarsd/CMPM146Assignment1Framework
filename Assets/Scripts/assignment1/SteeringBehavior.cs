@@ -110,14 +110,14 @@ public class SteeringBehavior : MonoBehaviour
             kinematic.SetDesiredRotationalVelocity(drv);
 
             float switch_buffer_math = buffer_math(nextAngle);
-            string message = "Debug:\nAngle: " + nextAngle + "\nMath: \n" + switch_buffer_math + " + " + buffer_math(90);
+            /*string message = "Debug:\nAngle: " + nextAngle + "\nMath: \n" + switch_buffer_math + " + " + buffer_math(90);
             label.SetText(message);
 
-            Debug.Log(message);
+            Debug.Log(message);*/
 
             if (dist <= switch_buffer_math) {//-switch_buffer/180*Math.Abs(nextAngle)+switch_buffer) {
                 pathIndex++;
-                Debug.Log("Switched to " + pathIndex + "!");
+                //Debug.Log("Switched to " + pathIndex + "!");
             }
 
         }

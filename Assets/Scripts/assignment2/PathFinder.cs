@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine.UIElements;
 
 public class PathFinder : MonoBehaviour
 {
@@ -41,28 +43,48 @@ public class PathFinder : MonoBehaviour
 
         // create data struction that holds both distances and parent
         List<AStarEntry> frontier = new() { new AStarEntry(start, 0, GetHeuristic(start, destination), null, null) };
-        List<GraphNode> expanded = new();
+        //List<GraphNode> expanded = new();
+        HashSet<int> expanded = new HashSet<int>();
+
+        int DebugCounter = 0;
+
 
         AStarEntry best = null;
         while (frontier.Count > 0)
         {
+            DebugCounter++;
             best = frontier[0];
-            expanded.Add(best.node);
+            expanded.Add(best.node.GetID());
             frontier.RemoveAt(0);
+            //if (frontier.Count > 1)
+            //{
+            //    Debug.Log(best.node.GetID() + " best and frontier " + frontier[0].node.GetID() + " after " + frontier[1].node.GetID());
+            //}
 
             if (best.node == destination) break;
 
+            //if (best.parent != null)
+            //{
+            //    Debug.Log("Before " + best.node.GetID() + "'s " + best.node.GetNeighbors().Count + " neighbors. Their Parent is " + best.parent.node.GetID() + " and the total distance is " + best.totalDist);
+            //}
+            int DebugNeighbors = 0;
             foreach (GraphNeighbor neighbor in best.node.GetNeighbors())
-            {   
-                if(expanded.Contains(neighbor.GetNode())) continue;
+            {
+                Debug.Log(best.node.GetID() + " parent of " + neighbor.GetNode().GetID());
+                DebugNeighbors++;
+                //Debug.Log(neighbor.GetNode().GetID());
+                if (expanded.Contains(neighbor.GetNode().GetID())) continue;
+                //Debug.Log(neighbor.GetNode().GetID() + "not expanded their parent is " + best.node.GetID());
 
                 AStarEntry child = new AStarEntry(neighbor.GetNode(), best.dist + GetHeuristic(best.node, neighbor.GetNode()), GetHeuristic(neighbor.GetNode(), destination), best, neighbor);
                 InsertSorted(frontier, child);
                 
                 // if already read skip
             }
-        }
 
+            Debug.Log(DebugNeighbors + " number of neighbor iterations. Number of neighbors: " +best.node.GetNeighbors().Count);
+        }
+        Debug.Log("Amount of iterations for Astar " + DebugCounter);
         while (best != null && best.parent != null)
         {
             path.Insert(0, GetCenterOfWall(best.neighbor.GetWall()));
@@ -88,12 +110,27 @@ public class PathFinder : MonoBehaviour
         {
             if(AStarList[i].totalDist > entry.totalDist)
             {
-                AStarList.Insert(i, entry); 
+                AStarList.Insert(i, entry);
+
+                string message1 = "";
+                for (int j = 0; j < AStarList.Count; j++)
+                {
+                    message1 += AStarList[i].node.GetID();
+                    message1 += ", ";
+                }
+                Debug.Log(message1);
                 return;
             }
         }
         AStarList.Add(entry);
-        return;
+
+        string message = "";
+        for (int i = 0; i < AStarList.Count; i++)
+        {
+            message += AStarList[i].node.GetID();
+            message += ", ";
+        }
+        Debug.Log(message);
     }
 
     public Graph graph;
