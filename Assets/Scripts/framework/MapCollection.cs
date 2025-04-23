@@ -73,7 +73,7 @@ public class MapCollection
     protected void AddNeighbor(GraphNode a, GraphNode b, int edge_a, int edge_b)
     {
         a.AddNeighbor(b, edge_a);
-        b.AddNeighbor(a, edge_b);
+        //b.AddNeighbor(a, edge_b);
     }
 
     protected void AddNode(List<GraphNode> nodes, float[] vertices)

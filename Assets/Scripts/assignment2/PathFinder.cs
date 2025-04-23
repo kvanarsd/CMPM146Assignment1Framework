@@ -55,6 +55,15 @@ public class PathFinder : MonoBehaviour
             DebugCounter++;
             best = frontier[0];
             expanded.Add(best.node.GetID());
+
+            string message1 = "";
+            for (int j = 0; j < frontier.Count; j++)
+            {
+                message1 += "(" + frontier[j].node.GetID() + ", p" + frontier[j].totalDist + ")";
+                message1 += ", ";
+            }
+            Debug.Log(message1 + "");
+
             frontier.RemoveAt(0);
             //if (frontier.Count > 1)
             //{
@@ -73,7 +82,13 @@ public class PathFinder : MonoBehaviour
                 Debug.Log(best.node.GetID() + " parent of " + neighbor.GetNode().GetID());
                 DebugNeighbors++;
                 //Debug.Log(neighbor.GetNode().GetID());
-                if (expanded.Contains(neighbor.GetNode().GetID())) continue;
+                if (expanded.Contains(neighbor.GetNode().GetID())) {
+                    Debug.Log(neighbor.GetNode().GetID() + " already expanded not adding");
+                    continue;
+                }
+
+                Debug.Log(neighbor.GetNode().GetID() + " not expanded adding now");
+
                 //Debug.Log(neighbor.GetNode().GetID() + "not expanded their parent is " + best.node.GetID());
 
                 AStarEntry child = new AStarEntry(neighbor.GetNode(), best.dist + GetHeuristic(best.node, neighbor.GetNode()), GetHeuristic(neighbor.GetNode(), destination), best, neighbor);
@@ -81,6 +96,14 @@ public class PathFinder : MonoBehaviour
                 
                 // if already read skip
             }
+
+            /*string message1 = "";
+            for (int j = 0; j < frontier.Count; j++)
+            {
+                message1 += frontier[j].node.GetID();
+                message1 += ", ";
+            }
+            Debug.Log(message1);*/
 
             Debug.Log(DebugNeighbors + " number of neighbor iterations. Number of neighbors: " +best.node.GetNeighbors().Count);
         }
@@ -108,29 +131,24 @@ public class PathFinder : MonoBehaviour
     {
         for (int i = 0; i < AStarList.Count; i++)
         {
-            if(AStarList[i].totalDist > entry.totalDist)
+            if (AStarList[i].node.GetID() == entry.node.GetID()) {
+                if (AStarList[i].totalDist > entry.totalDist) {
+                    AStarList[i].totalDist = entry.totalDist;
+                    AStarList[i].dist = entry.dist;
+                    AStarList[i].heuristic = entry.heuristic;
+                    AStarList[i].parent = entry.parent;
+                    AStarList[i].neighbor = entry.neighbor;
+                }
+                return;
+            }
+
+            if (AStarList[i].totalDist > entry.totalDist)
             {
                 AStarList.Insert(i, entry);
-
-                string message1 = "";
-                for (int j = 0; j < AStarList.Count; j++)
-                {
-                    message1 += AStarList[i].node.GetID();
-                    message1 += ", ";
-                }
-                Debug.Log(message1);
                 return;
             }
         }
         AStarList.Add(entry);
-
-        string message = "";
-        for (int i = 0; i < AStarList.Count; i++)
-        {
-            message += AStarList[i].node.GetID();
-            message += ", ";
-        }
-        Debug.Log(message);
     }
 
     public Graph graph;
