@@ -2186,12 +2186,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rotational_velocity: 0
   desired_rotational_velocity: 0
-  max_rotational_velocity: 135
+  max_rotational_velocity: 75
   speed: 0
   desired_speed: 0
-  max_speed: 20
-  linear_acceleration: 10
-  rotational_acceleration: 180
+  max_speed: 25
+  linear_acceleration: 20
+  rotational_acceleration: 255
   holonomic: 0
   nonholonomic_factor: 3
   start_position: {x: 0, y: 0, z: 0}
