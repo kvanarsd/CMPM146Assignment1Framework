@@ -132,16 +132,17 @@ public class PathFinder : MonoBehaviour
         for (int i = 0; i < AStarList.Count; i++)
         {
             if (AStarList[i].node.GetID() == entry.node.GetID()) {
-                if (AStarList[i].totalDist > entry.totalDist) {
-                    AStarList[i].totalDist = entry.totalDist;
-                    AStarList[i].dist = entry.dist;
-                    AStarList[i].heuristic = entry.heuristic;
-                    AStarList[i].parent = entry.parent;
-                    AStarList[i].neighbor = entry.neighbor;
+                if (AStarList[i].totalDist > entry.totalDist)
+                {
+                    // Remove old entry if it has a longer distance
+                    AStarList.RemoveAt(i);
+                    AStarList.Insert(i, entry);
+                    return;
+                } else {
+                    // don't add anything if new entry is worse
+                    return;
                 }
-                return;
             }
-
             if (AStarList[i].totalDist > entry.totalDist)
             {
                 AStarList.Insert(i, entry);
