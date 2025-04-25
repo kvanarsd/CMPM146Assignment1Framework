@@ -37,7 +37,6 @@ public class PathFinder : MonoBehaviour
     }
     public static (List<Vector3>, int) AStar(GraphNode start, GraphNode destination, Vector3 target)
     {
-        Debug.Log("Called " + target);
         // Implement A* here
         List<Vector3> path = new List<Vector3>() { target };
 
@@ -55,39 +54,21 @@ public class PathFinder : MonoBehaviour
             DebugCounter++;
             best = frontier[0];
             expanded.Add(best.node.GetID());
-
-            string message1 = "";
-            for (int j = 0; j < frontier.Count; j++)
-            {
-                message1 += "(" + frontier[j].node.GetID() + ", p" + frontier[j].totalDist + ")";
-                message1 += ", ";
-            }
-            Debug.Log(message1 + "");
-
             frontier.RemoveAt(0);
-            //if (frontier.Count > 1)
-            //{
-            //    Debug.Log(best.node.GetID() + " best and frontier " + frontier[0].node.GetID() + " after " + frontier[1].node.GetID());
-            //}
 
             if (best.node == destination) break;
 
-            //if (best.parent != null)
-            //{
-            //    Debug.Log("Before " + best.node.GetID() + "'s " + best.node.GetNeighbors().Count + " neighbors. Their Parent is " + best.parent.node.GetID() + " and the total distance is " + best.totalDist);
-            //}
-            int DebugNeighbors = 0;
             foreach (GraphNeighbor neighbor in best.node.GetNeighbors())
             {
-                Debug.Log(best.node.GetID() + " parent of " + neighbor.GetNode().GetID());
-                DebugNeighbors++;
+                //Debug.Log(best.node.GetID() + " parent of " + neighbor.GetNode().GetID());
+                //DebugNeighbors++;
                 //Debug.Log(neighbor.GetNode().GetID());
                 if (expanded.Contains(neighbor.GetNode().GetID())) {
-                    Debug.Log(neighbor.GetNode().GetID() + " already expanded not adding");
+                    //Debug.Log(neighbor.GetNode().GetID() + " already expanded not adding");
                     continue;
                 }
 
-                Debug.Log(neighbor.GetNode().GetID() + " not expanded adding now");
+                //Debug.Log(neighbor.GetNode().GetID() + " not expanded adding now");
 
                 //Debug.Log(neighbor.GetNode().GetID() + "not expanded their parent is " + best.node.GetID());
 
@@ -105,9 +86,9 @@ public class PathFinder : MonoBehaviour
             }
             Debug.Log(message1);*/
 
-            Debug.Log(DebugNeighbors + " number of neighbor iterations. Number of neighbors: " +best.node.GetNeighbors().Count);
+            //Debug.Log(DebugNeighbors + " number of neighbor iterations. Number of neighbors: " +best.node.GetNeighbors().Count);
         }
-        Debug.Log("Amount of iterations for Astar " + DebugCounter);
+        //Debug.Log("Amount of iterations for Astar " + DebugCounter);
         while (best != null && best.parent != null)
         {
             path.Insert(0, GetCenterOfWall(best.neighbor.GetWall()));
