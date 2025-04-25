@@ -19,19 +19,83 @@ public class NavMesh : MonoBehaviour
     //    you are splitting)
     public Graph MakeNavMesh(List<Wall> outline)
     {
-        for (int i = 0; i < outline.Count; i++) {
-            Wall first = outline[i];
-            Wall second = outline[(i + 1) % outline.Count];
-            if (Vector3.Dot(first.normal, second.direction) <= 0) {
-                Debug.Log("Reflex angle!");
-                GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                sphere.transform.position = first.end;
-                sphere.transform.localScale = Vector3.one * 5;
+        List<Polygon> polygons = new List<Polygon>();
+        polygons.Add(new Polygon(outline));
+
+        while (true)
+        {
+            int first = FindReflex(outline, 0);
+            int iterate = first + 1;
+
+            while (true) { 
+                int next = FindReflex(outline, iterate);
+                Wall wall = new Wall(outline[first].end, outline[next].end);
+                CheckAllCrosses(polygons, wall);
+
+                iterate = next + 1;
             }
-        }
+            
+        }   
         Graph g = new Graph();
         g.all_nodes = new List<GraphNode>();
         return g;
+    }
+
+    public bool CheckCreatedAngles(List<Wall> outline, int start, int end, Wall startToEnd, Wall endToStart)
+    {
+
+    }
+
+    public float AngleBetweenWalls(Wall wall1, Wall wall2)
+    {
+        return 0;
+    }
+
+    public bool CheckAllCrosses(List<Polygon> polygons, Wall wall)
+    {
+        foreach (Polygon p in polygons) foreach (Wall w in p.walls) if (w.Crosses(wall)) return true;
+
+        return false;
+    }
+
+    public int FindReflex (List<Wall> outline, int i)
+    {
+        for (; i < outline.Count; i++)
+        {
+            Wall first = outline[i];
+            Wall second = outline[(i + 1) % outline.Count];
+            if (Vector3.Dot(first.normal, second.direction) < 0)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public class Polygon
+    {
+        public List<Wall> walls;
+
+        public Polygon(List<Wall> walls)
+        {
+            this.walls = walls;
+        }
+
+        public void AddWall(Wall wall)
+        {
+            walls.Add(wall);
+        }
+
+        public (Polygon first, Polygon second) Split(Polygon Parent, int start, int end, Wall newWall) 
+        {
+            Polygon first = new Polygon();
+            Polygon second = new Polygon();
+            first.AddWall(newWall);
+            second.AddWall(newWall);
+
+            return (first, second);
+        }
     }
 
     List<Wall> outline;
