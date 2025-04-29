@@ -84,11 +84,12 @@ public class NavMesh : MonoBehaviour
                     int i = 2;
                     int loop = 0;
                     while (loop < walls.Count - 3) {
-                        if (CollidesWithWall(walls[first].end, walls[(first+i)%walls.Count].end)) {
+                        if (this.CollidesWithWall(walls[first].end, walls[(first+i)%walls.Count].end)) {
                             i++;
                             loop++;
                             continue;
                         }
+
                         return Split(first, (first+i)%walls.Count);
                     }
                     throw new AbandonedMutexException(loop + " " + i + " FindSplit couldn't find non-colliding split");
@@ -96,12 +97,15 @@ public class NavMesh : MonoBehaviour
 
                 // This code should figure out which other reflex node to connect to
                 // Currently it just connects to the next reflex node avalible
-                return Split(first, (next+1)%walls.Count);
+
+                if (this.CollidesWithWall(walls[first].end, walls[(next+1)%walls.Count].end)) {
+                    return Split(first, (next+1)%walls.Count);
+                }
 
                 // Wall wall = new Wall(outline[first].end, outline[next].end);
                 // CheckAllCrosses(polygons, wall);
 
-                // iterate = next + 1;
+                iterate = next + 1;
             }
         }
 
@@ -124,6 +128,9 @@ public class NavMesh : MonoBehaviour
         }
 
         public bool CollidesWithWall(Vector3 start, Vector3 end) {
+            if (!Util.PointInPolygon(GetCenterpoint(start, end), walls)) {
+                return true;
+            }
             foreach (Wall wall in walls) {
                 if (start == wall.start || start == wall.end || end == wall.start || end == wall.end) {
                     continue;
@@ -147,6 +154,10 @@ public class NavMesh : MonoBehaviour
         sphere.transform.position = position;
         sphere.transform.localScale = Vector3.one * 5;
         return sphere;
+    }
+
+    public static Vector3 GetCenterpoint(Vector3 p1, Vector3 p2) {
+        return (p1 + p2) / 2f;
     }
 
     public static float AngleBetweenWalls(Wall wall1, Wall wall2)
