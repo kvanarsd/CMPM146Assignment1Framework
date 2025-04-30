@@ -1,6 +1,9 @@
 using System.Collections.Generic;
+//using System.Drawing;
 using System.Threading;
+using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEngine.InputSystem.LowLevel.InputStateHistory;
 
 public class NavMesh : MonoBehaviour
 {
@@ -84,7 +87,7 @@ public class NavMesh : MonoBehaviour
                 if (next == -1) {
                     // There are no more reflex points other than our current one.
 
-                    // CreateSphere(walls[first].end);
+                    CreateSphere(walls[first].end);
                     int i = 2;
                     int loop = 0;
 
@@ -93,25 +96,52 @@ public class NavMesh : MonoBehaviour
                     while (loop < walls.Count - 3) {
                         int p1 = (first+1)%walls.Count;
                         int p2 = (first+1+i)%walls.Count;
-                        Debug.DrawLine(walls[first].end, walls[(first+i)%walls.Count].end, Color.blue, 100, false);
-                        if (this.CollidesWithWall(walls[first].end, walls[(first+i)%walls.Count].end)) {
-                            CreateSphere(GetCenterpoint(walls[first].end, walls[(first+i)%walls.Count].end));
-                            Debug.Log("midpoint");
+                        
+                        if (this.CollidesWithWall(walls[first].end, walls[(first+i)%walls.Count].end) ||
+                            CheckCreatedReflex(first, (first + i) % walls.Count))
+                        {
+                            //CreateSphere(GetCenterpoint(walls[first].end, walls[(first+i)%walls.Count].end));
+                            //Debug.Log("midpoint");
                             
                             i++;
                             loop++;
                             continue;
                         }
-                        return Split(p1, p2);
+                        
+                        //Debug.DrawLine(walls[first].end, walls[(first+i)%walls.Count].end, Color.blue, 100, false);
+                        return Split(p1, p2, Color.blue);
                     }
+
+                    // start over and get any split that doesn't collide
+                    i = 2;
+                    loop = 0;
+                    while (loop < walls.Count - 3)
+                    {
+                        int p1 = (first + 1) % walls.Count;
+                        int p2 = (first + 1 + i) % walls.Count;
+
+                        if (this.CollidesWithWall(walls[first].end, walls[(first + i) % walls.Count].end))
+                        {
+                            i++;
+                            loop++;
+                            continue;
+                        }
+
+                        //Debug.DrawLine(walls[first].end, walls[(first+i)%walls.Count].end, Color.blue, 100, false);
+                        return Split(p1, p2, Color.yellow);
+                    }
+
                     throw new AbandonedMutexException(loop + " " + i + " FindSplit couldn't find non-colliding split");
                 }
 
                 // This code should figure out which other reflex node to connect to
                 // Currently it just connects to the next reflex node avalible
 
-                if (!this.CollidesWithWall(walls[first].end, walls[next%walls.Count].end)) {
-                    return Split((first+1)%walls.Count, (next+1)%walls.Count);
+                if (!this.CollidesWithWall(walls[first].end, walls[next].end)) {
+                    if (!CheckCreatedReflex(first, next)) {
+                        return Split((first+1)%walls.Count, (next+1)%walls.Count, Color.white);
+                    }
+                    
                 }
 
                 // Wall wall = new Wall(outline[first].end, outline[next].end);
@@ -121,7 +151,7 @@ public class NavMesh : MonoBehaviour
             }
         }
 
-        public (Polygon first, Polygon second) Split(int start, int end) // start = inclusive, end = exclisive
+        public (Polygon first, Polygon second) Split(int start, int end, Color color) // start = inclusive, end = exclisive
         {
             int w = walls.Count;
             Polygon first = new Polygon(GetRange(walls, start, end));
@@ -130,7 +160,7 @@ public class NavMesh : MonoBehaviour
             Vector3 p1 = first.walls[0].start;
             Vector3 p2 = first.walls[^1].end;
 
-            Debug.DrawLine(p1, p2, Color.yellow, 100, false);
+            Debug.DrawLine(p1, p2, color, 100, false);
 
             // CreateSphere(first.walls[first.walls.Count-1].end);
             // CreateSphere(first.walls[0].start);
@@ -159,12 +189,33 @@ public class NavMesh : MonoBehaviour
             }
             return false;
         }
+
+        public bool CheckCreatedReflex(int start, int end)
+        {
+            Vector3 p1 = walls[start].end;
+            Vector3 p2 = walls[end].end;
+            Wall firstWall = new Wall(p1, p2);
+            Wall secondWall = new Wall(p2, p1);
+
+            //(bool first, bool next) value = (false, false);
+
+            if ((Vector3.Dot(walls[start].normal, firstWall.direction) < 0) ||
+                (Vector3.Dot(secondWall.normal, walls[(start + 1)%walls.Count].direction) < 0))
+            {
+                return true;
+            } else {
+                return false;
+            }
+
+            /* if ((Vector3.Dot(walls[end].normal, secondWall.direction) < 0) ||
+                (Vector3.Dot(firstWall.normal, walls[(end + 1) % walls.Count].direction) < 0))
+            {
+                return true;
+            }
+
+            return false;*/
+        }
     }
-
-    // public bool CheckCreatedAngles(List<Wall> outline, int start, int end, Wall startToEnd, Wall endToStart)
-    // {
-
-    // }
 
     public static GameObject CreateSphere(Vector3 position) {
         GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
