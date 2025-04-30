@@ -93,11 +93,7 @@ public class NavMesh : MonoBehaviour
                     while (loop < walls.Count - 3) {
                         int p1 = (first+1)%walls.Count;
                         int p2 = (first+1+i)%walls.Count;
-                        Debug.DrawLine(walls[first].end, walls[(first+i)%walls.Count].end, Color.blue, 100, false);
                         if (this.CollidesWithWall(walls[first].end, walls[(first+i)%walls.Count].end)) {
-                            CreateSphere(GetCenterpoint(walls[first].end, walls[(first+i)%walls.Count].end));
-                            Debug.Log("midpoint");
-                            
                             i++;
                             loop++;
                             continue;
