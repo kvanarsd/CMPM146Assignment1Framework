@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class NavMesh : MonoBehaviour
 {
+    static int wallsHit = 0;
+
     // implement NavMesh generation here:
     //    the outline are Walls in counterclockwise order
     //    iterate over them, and if you find a reflex angle
@@ -18,6 +20,8 @@ public class NavMesh : MonoBehaviour
     //    you are splitting)
     public Graph MakeNavMesh(List<Wall> outline)
     {
+        wallsHit = 0;
+
         List<Polygon> polygons = new List<Polygon>();
 
         Stack<Polygon> toHandle = new();
@@ -83,14 +87,22 @@ public class NavMesh : MonoBehaviour
                     // CreateSphere(walls[first].end);
                     int i = 2;
                     int loop = 0;
+
+                    Debug.Log("no next!");
+
                     while (loop < walls.Count - 3) {
+                        int p1 = (first+1)%walls.Count;
+                        int p2 = (first+1+i)%walls.Count;
+                        Debug.DrawLine(walls[first].end, walls[(first+i)%walls.Count].end, Color.blue, 100, false);
                         if (this.CollidesWithWall(walls[first].end, walls[(first+i)%walls.Count].end)) {
+                            CreateSphere(GetCenterpoint(walls[first].end, walls[(first+i)%walls.Count].end));
+                            Debug.Log("midpoint");
+                            
                             i++;
                             loop++;
                             continue;
                         }
-
-                        return Split(first, (first+i)%walls.Count);
+                        return Split(p1, p2);
                     }
                     throw new AbandonedMutexException(loop + " " + i + " FindSplit couldn't find non-colliding split");
                 }
@@ -98,8 +110,8 @@ public class NavMesh : MonoBehaviour
                 // This code should figure out which other reflex node to connect to
                 // Currently it just connects to the next reflex node avalible
 
-                if (this.CollidesWithWall(walls[first].end, walls[(next+1)%walls.Count].end)) {
-                    return Split(first, (next+1)%walls.Count);
+                if (!this.CollidesWithWall(walls[first].end, walls[next%walls.Count].end)) {
+                    return Split((first+1)%walls.Count, (next+1)%walls.Count);
                 }
 
                 // Wall wall = new Wall(outline[first].end, outline[next].end);
@@ -109,20 +121,22 @@ public class NavMesh : MonoBehaviour
             }
         }
 
-        public (Polygon first, Polygon second) Split(int start, int end) 
+        public (Polygon first, Polygon second) Split(int start, int end) // start = inclusive, end = exclisive
         {
             int w = walls.Count;
-            Polygon first = new Polygon(GetRange(walls, (start+1)%w, (end+1)%w));
-            Polygon second = new Polygon(GetRange(walls, (end+1)%w, (start+1)%w));
+            Polygon first = new Polygon(GetRange(walls, start, end));
+            Polygon second = new Polygon(GetRange(walls, end, start));
 
-            Debug.DrawLine(first.walls[first.walls.Count-1].end, first.walls[0].start, Color.blue, 100, false);
+            Vector3 p1 = first.walls[0].start;
+            Vector3 p2 = first.walls[^1].end;
+
+            Debug.DrawLine(p1, p2, Color.yellow, 100, false);
+
             // CreateSphere(first.walls[first.walls.Count-1].end);
             // CreateSphere(first.walls[0].start);
 
-            first.AddWall(new Wall(first.walls[first.walls.Count-1].end, first.walls[0].start));
-            second.AddWall(new Wall(second.walls[second.walls.Count-1].end, second.walls[0].start));
-
-            
+            first.AddWall(new Wall(p2, p1));
+            second.AddWall(new Wall(p1, p2));
 
             return (first, second);
         }
@@ -132,11 +146,14 @@ public class NavMesh : MonoBehaviour
                 return true;
             }
             foreach (Wall wall in walls) {
+                if ((start == wall.start && end == wall.end) || (start == wall.end && end == wall.start)) {
+                    return true;
+                }
                 if (start == wall.start || start == wall.end || end == wall.start || end == wall.end) {
                     continue;
                 }
                 if (wall.Crosses(start, end)) {
-                    Debug.Log(start + " " + end + " - " + wall.start + " " + wall.end);
+                    // Debug.Log(start + " " + end + " - " + wall.start + " " + wall.end);
                     return true;
                 }
             }
@@ -152,7 +169,7 @@ public class NavMesh : MonoBehaviour
     public static GameObject CreateSphere(Vector3 position) {
         GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         sphere.transform.position = position;
-        sphere.transform.localScale = Vector3.one * 5;
+        sphere.transform.localScale = Vector3.one * 15;
         return sphere;
     }
 
