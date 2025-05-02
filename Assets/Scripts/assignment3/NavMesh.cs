@@ -105,50 +105,27 @@ public class NavMesh : MonoBehaviour
             int iterate = first + 1;
             (int index, int created, float dist) bestWall = (-1, 0, 0);
 
-            while (true) { 
-                int next = FindReflex(walls, iterate);
-                if (next == -1 && bestWall.index == -1) {
-                    // There are no more reflex points other than our current one.
+            int i = 2;
+            int loop = 0;
 
-                    CreateSphere(walls[first].end);
-                    int i = 2;
-                    int loop = 0;
-
-                    Debug.Log("no next!");
-
-                    while (loop < walls.Count - 3) {
-                        if (!this.CollidesWithWall(walls[first].end, walls[(first+i)%walls.Count].end))
-                        {
-                            int created = CheckCreatedReflex(first, (first+i)%walls.Count);
-                            float dist = Vector3.Distance(walls[first].end, walls[(first+i)%walls.Count].end);
-                            if(bestWall.index == -1 || bestWall.created > created || (bestWall.created == created && bestWall.dist > dist)) {
-                                bestWall = ((first+i)%walls.Count, created, dist);
-                            }
-                        } 
-                        
-                        i++;
-                        loop++;
-                    }
-
-                    if (bestWall.index == -1) {
-                        throw new AbandonedMutexException(loop + " " + i + " FindSplit couldn't find non-colliding split");
-                    } else {
-                        return Split((first+1)%walls.Count, (bestWall.index+1)%walls.Count, Color.blue);
-                    }
-                    
-                } else if (next == -1) {
-                    return Split((first+1)%walls.Count, (bestWall.index+1)%walls.Count, Color.white);
-                }
-
-                if (!this.CollidesWithWall(walls[first].end, walls[next].end)) {
-                    int created = CheckCreatedReflex(first, next);
-                    float dist = Vector3.Distance(walls[first].end, walls[next].end);
+            while (loop < walls.Count - 3) {
+                if (!this.CollidesWithWall(walls[first].end, walls[(first+i)%walls.Count].end))
+                {
+                    int created = CheckCreatedReflex(first, (first+i)%walls.Count);
+                    float dist = Vector3.Distance(walls[first].end, walls[(first+i)%walls.Count].end);
                     if(bestWall.index == -1 || bestWall.created > created || (bestWall.created == created && bestWall.dist > dist)) {
-                        bestWall = (next, created, dist);
+                        bestWall = ((first+i)%walls.Count, created, dist);
                     }
-                }
+                } 
+                
+                i++;
+                loop++;
+            }
 
-                iterate = next + 1;
+            if (bestWall.index == -1) {
+                throw new AbandonedMutexException(loop + " " + i + " FindSplit couldn't find non-colliding split");
+            } else {
+                return Split((first+1)%walls.Count, (bestWall.index+1)%walls.Count, Color.blue);
             }
         }
 
@@ -159,11 +136,6 @@ public class NavMesh : MonoBehaviour
 
             Vector3 p1 = first.walls[0].start;
             Vector3 p2 = first.walls[^1].end;
-
-            Debug.DrawLine(p1, p2, color, 10, false);
-
-            // CreateSphere(first.walls[first.walls.Count-1].end);
-            // CreateSphere(first.walls[0].start);
 
             first.AddWall(new Wall(p2, p1));
             second.AddWall(new Wall(p1, p2));
@@ -187,7 +159,6 @@ public class NavMesh : MonoBehaviour
                     continue;
                 }
                 if (wall.Crosses(start, end)) {
-                    // Debug.Log(start + " " + end + " - " + wall.start + " " + wall.end);
                     return true;
                 }
             }
