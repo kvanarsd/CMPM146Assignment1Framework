@@ -7,7 +7,6 @@ using static UnityEngine.InputSystem.LowLevel.InputStateHistory;
 
 public class NavMesh : MonoBehaviour
 {
-    static int wallsHit = 0;
 
     // implement NavMesh generation here:
     //    the outline are Walls in counterclockwise order
@@ -23,15 +22,7 @@ public class NavMesh : MonoBehaviour
     //    you are splitting)
     public Graph MakeNavMesh(List<Wall> outline)
     {
-        foreach (Wall wall in outline) {
-            Debug.Log(wall.start);
-        }
-
-        Vector3 point = new Vector3(-100, 0, 50);
-        Debug.Log("Point inside: " + Util.PointInPolygon(point, outline));
-
-        wallsHit = 0;
-
+        
         List<Polygon> polygons = new List<Polygon>();
 
         Stack<Polygon> toHandle = new();
