@@ -8,7 +8,7 @@ public class Util
         int n = 0;
         foreach (var w in polygon)
         {
-            if (w.Crosses(point, point + new Vector3(100000, 0, 0)))
+            if (w.Crosses(point, point + new Vector3(100000, 0, 1000)))
             {
                 n++;
             }

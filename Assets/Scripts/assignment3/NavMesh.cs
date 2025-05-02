@@ -81,10 +81,11 @@ public class NavMesh : MonoBehaviour
             }
 
             int iterate = first + 1;
+            (int index, int created, float dist) bestWall = (-1, 0, 0);
 
             while (true) { 
                 int next = FindReflex(walls, iterate);
-                if (next == -1) {
+                if (next == -1 && bestWall.index == -1) {
                     // There are no more reflex points other than our current one.
 
                     CreateSphere(walls[first].end);
@@ -94,58 +95,36 @@ public class NavMesh : MonoBehaviour
                     Debug.Log("no next!");
 
                     while (loop < walls.Count - 3) {
-                        int p1 = (first+1)%walls.Count;
-                        int p2 = (first+1+i)%walls.Count;
-                        
-                        if (this.CollidesWithWall(walls[first].end, walls[(first+i)%walls.Count].end) ||
-                            CheckCreatedReflex(first, (first + i) % walls.Count))
+                        if (!this.CollidesWithWall(walls[first].end, walls[(first+i)%walls.Count].end))
                         {
-                            //CreateSphere(GetCenterpoint(walls[first].end, walls[(first+i)%walls.Count].end));
-                            //Debug.Log("midpoint");
-                            
-                            i++;
-                            loop++;
-                            continue;
-                        }
+                            int created = CheckCreatedReflex(first, (first+i)%walls.Count);
+                            float dist = Vector3.Distance(walls[first].end, walls[(first+i)%walls.Count].end);
+                            if(bestWall.index == -1 || bestWall.created > created || (bestWall.created == created && bestWall.dist > dist)) {
+                                bestWall = ((first+i)%walls.Count, created, dist);
+                            }
+                        } 
                         
-                        //Debug.DrawLine(walls[first].end, walls[(first+i)%walls.Count].end, Color.blue, 100, false);
-                        return Split(p1, p2, Color.blue);
+                        i++;
+                        loop++;
                     }
 
-                    // start over and get any split that doesn't collide
-                    i = 2;
-                    loop = 0;
-                    while (loop < walls.Count - 3)
-                    {
-                        int p1 = (first + 1) % walls.Count;
-                        int p2 = (first + 1 + i) % walls.Count;
-
-                        if (this.CollidesWithWall(walls[first].end, walls[(first + i) % walls.Count].end))
-                        {
-                            i++;
-                            loop++;
-                            continue;
-                        }
-
-                        //Debug.DrawLine(walls[first].end, walls[(first+i)%walls.Count].end, Color.blue, 100, false);
-                        return Split(p1, p2, Color.yellow);
-                    }
-
-                    throw new AbandonedMutexException(loop + " " + i + " FindSplit couldn't find non-colliding split");
-                }
-
-                // This code should figure out which other reflex node to connect to
-                // Currently it just connects to the next reflex node avalible
-
-                if (!this.CollidesWithWall(walls[first].end, walls[next].end)) {
-                    if (!CheckCreatedReflex(first, next)) {
-                        return Split((first+1)%walls.Count, (next+1)%walls.Count, Color.white);
+                    if (bestWall.index == -1) {
+                        throw new AbandonedMutexException(loop + " " + i + " FindSplit couldn't find non-colliding split");
+                    } else {
+                        return Split((first+1)%walls.Count, (bestWall.index+1)%walls.Count, Color.blue);
                     }
                     
+                } else if (next == -1) {
+                    return Split((first+1)%walls.Count, (bestWall.index+1)%walls.Count, Color.white);
                 }
 
-                // Wall wall = new Wall(outline[first].end, outline[next].end);
-                // CheckAllCrosses(polygons, wall);
+                if (!this.CollidesWithWall(walls[first].end, walls[next].end)) {
+                    int created = CheckCreatedReflex(first, next);
+                    float dist = Vector3.Distance(walls[first].end, walls[next].end);
+                    if(bestWall.index == -1 || bestWall.created > created || (bestWall.created == created && bestWall.dist > dist)) {
+                        bestWall = (next, created, dist);
+                    }
+                }
 
                 iterate = next + 1;
             }
@@ -160,7 +139,7 @@ public class NavMesh : MonoBehaviour
             Vector3 p1 = first.walls[0].start;
             Vector3 p2 = first.walls[^1].end;
 
-            Debug.DrawLine(p1, p2, color, 100, false);
+            Debug.DrawLine(p1, p2, color, 10, false);
 
             // CreateSphere(first.walls[first.walls.Count-1].end);
             // CreateSphere(first.walls[0].start);
@@ -190,30 +169,28 @@ public class NavMesh : MonoBehaviour
             return false;
         }
 
-        public bool CheckCreatedReflex(int start, int end)
+        public int CheckCreatedReflex(int start, int end)
         {
             Vector3 p1 = walls[start].end;
             Vector3 p2 = walls[end].end;
             Wall firstWall = new Wall(p1, p2);
             Wall secondWall = new Wall(p2, p1);
 
-            //(bool first, bool next) value = (false, false);
+            int created = 0;
 
             if ((Vector3.Dot(walls[start].normal, firstWall.direction) < 0) ||
                 (Vector3.Dot(secondWall.normal, walls[(start + 1)%walls.Count].direction) < 0))
             {
-                return true;
-            } else {
-                return false;
-            }
+                created++;
+            } 
 
-            /* if ((Vector3.Dot(walls[end].normal, secondWall.direction) < 0) ||
+            if ((Vector3.Dot(walls[end].normal, secondWall.direction) < 0) ||
                 (Vector3.Dot(firstWall.normal, walls[(end + 1) % walls.Count].direction) < 0))
             {
-                return true;
+                created++;
             }
 
-            return false;*/
+            return created;
         }
     }
 
