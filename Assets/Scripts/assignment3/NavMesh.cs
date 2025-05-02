@@ -23,6 +23,13 @@ public class NavMesh : MonoBehaviour
     //    you are splitting)
     public Graph MakeNavMesh(List<Wall> outline)
     {
+        foreach (Wall wall in outline) {
+            Debug.Log(wall.start);
+        }
+
+        Vector3 point = new Vector3(-100, 0, 50);
+        Debug.Log("Point inside: " + Util.PointInPolygon(point, outline));
+
         wallsHit = 0;
 
         List<Polygon> polygons = new List<Polygon>();
@@ -49,17 +56,32 @@ public class NavMesh : MonoBehaviour
             Debug.Log("Saftey was triggered!");
         }
 
-
-
         Graph g = new Graph();
         g.all_nodes = new List<GraphNode>();
+
+        int i = 0;
+        foreach (Polygon p in polygons) {
+            p.graphNode = new GraphNode(i++, p.walls);
+            g.all_nodes.Add(p.graphNode);
+        }
+
+        foreach (Polygon p in polygons) {
+            foreach (Polygon other in polygons) {
+                if (p == other) continue;
+                int shared = p.SharesWall(other);
+                if (shared != -1) {
+                    p.graphNode.AddNeighbor(other.graphNode, shared);
+                }
+            }
+        }
+        
         return g;
     }
 
     public class Polygon
     {
         public List<Wall> walls;
-        public List<Polygon> neighbors; // TODO fill this when we split
+        public GraphNode graphNode;
 
         public Polygon(List<Wall> walls)
         {
@@ -153,7 +175,6 @@ public class NavMesh : MonoBehaviour
 
         public (Polygon first, Polygon second) Split(int start, int end, Color color) // start = inclusive, end = exclisive
         {
-            int w = walls.Count;
             Polygon first = new Polygon(GetRange(walls, start, end));
             Polygon second = new Polygon(GetRange(walls, end, start));
 
@@ -179,6 +200,10 @@ public class NavMesh : MonoBehaviour
                 if ((start == wall.start && end == wall.end) || (start == wall.end && end == wall.start)) {
                     return true;
                 }
+                Vector3 midpoint = GetCenterpoint(start, end);
+                if (wall.Crosses(midpoint, midpoint)) {
+                    return true;
+                }
                 if (start == wall.start || start == wall.end || end == wall.start || end == wall.end) {
                     continue;
                 }
@@ -188,6 +213,15 @@ public class NavMesh : MonoBehaviour
                 }
             }
             return false;
+        }
+
+        public int SharesWall(Polygon polygon) {
+            foreach (Wall wall in walls) {
+                foreach(Wall otherWall in polygon.walls) {
+                    if (wall.Same(otherWall)) return walls.IndexOf(wall);
+                }
+            }
+            return -1;
         }
 
         public bool CheckCreatedReflex(int start, int end)
